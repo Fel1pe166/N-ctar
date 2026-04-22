@@ -38,7 +38,11 @@ Premium PT-BR ad platform with dark gamer aesthetic (black + neon yellow).
 - **Ad tracking**: anonymous `POST /ads/:id/view` and `/click` increment counters; CTR computed in API
 
 ### Backend (artifacts/api-server)
-- Routes: `/me`, `/plans`, `/ads` CRUD, `/ads/:id/view`, `/ads/:id/click`, `/dashboard/summary`, `/dashboard/timeseries`, `/payment/checkout`, `/notifications/feed`
+- Routes: `/me`, `/plans`, `/ads` CRUD, `/ads/:id/view`, `/ads/:id/click`, `/dashboard/summary`, `/dashboard/timeseries`, `/payment/checkout`, `/notifications/feed`, `/feed` (public marketplace, optional `?category=`)
+- Ads have `imageUrl` + `category` (15 fixed categories: Discord, WhatsApp, Facebook, Site, Twitter, Pinterest, Instagram, Kwai, TikTok, Cursos, Shopee, Spotify, Aliexpress, Telegram, Design)
+- Frontend `/` is the public `MarketplaceHome` (feed grid 1/2/3/4, hero search + dark `CategoryDropdown`, animated chips). Logged-in users access `/dashboard` via header/drawer.
+- `CategoryDropdown` (light/dark variants): vertical fade+slide menu, single-select, active = yellow #FFD700 + glow, hover = translate-x.
+- Create-ad modal: white SaaS card with large inputs, yellow focus ring, light category dropdown, image URL field, gradient yellow→orange "Publicar anúncio" button with shimmer sweep.
 - Plan limits enforced server-side in `lib/userPlan.ts`; ensureUser bootstraps a Clerk user into local DB on first authenticated request
 
 ### DB schema (lib/db/src/schema)

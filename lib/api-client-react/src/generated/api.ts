@@ -22,6 +22,7 @@ import type {
   CheckoutResponse,
   CreateAdInput,
   DashboardSummary,
+  GetMarketplaceFeedParams,
   HealthStatus,
   OkResponse,
   Plan,
@@ -938,6 +939,99 @@ export function useGetNotificationFeed<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetNotificationFeedQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Public marketplace feed of all ads
+ */
+export const getGetMarketplaceFeedUrl = (params?: GetMarketplaceFeedParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/feed?${stringifiedParams}`
+    : `/api/feed`;
+};
+
+export const getMarketplaceFeed = async (
+  params?: GetMarketplaceFeedParams,
+  options?: RequestInit,
+): Promise<Ad[]> => {
+  return customFetch<Ad[]>(getGetMarketplaceFeedUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMarketplaceFeedQueryKey = (
+  params?: GetMarketplaceFeedParams,
+) => {
+  return [`/api/feed`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetMarketplaceFeedQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMarketplaceFeed>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetMarketplaceFeedParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMarketplaceFeed>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetMarketplaceFeedQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMarketplaceFeed>>
+  > = ({ signal }) => getMarketplaceFeed(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMarketplaceFeed>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMarketplaceFeedQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMarketplaceFeed>>
+>;
+export type GetMarketplaceFeedQueryError = ErrorType<unknown>;
+
+export function useGetMarketplaceFeed<
+  TData = Awaited<ReturnType<typeof getMarketplaceFeed>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetMarketplaceFeedParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMarketplaceFeed>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMarketplaceFeedQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

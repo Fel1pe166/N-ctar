@@ -13,12 +13,25 @@ function serialize(a: Ad) {
     title: a.title,
     description: a.description,
     link: a.link,
+    imageUrl: a.imageUrl,
+    category: a.category,
     views: a.views,
     clicks: a.clicks,
     ctr,
     createdAt: a.createdAt.toISOString(),
   };
 }
+
+router.get("/feed", async (req, res) => {
+  const category = typeof req.query.category === "string" ? req.query.category : null;
+  const rows = await db
+    .select()
+    .from(adsTable)
+    .where(category ? eq(adsTable.category, category) : sql`true`)
+    .orderBy(sql`${adsTable.createdAt} desc`)
+    .limit(120);
+  res.json(rows.map(serialize));
+});
 
 router.get("/ads", requireAuth, async (req, res) => {
   const { userId } = req as AuthedRequest;
@@ -57,6 +70,8 @@ router.post("/ads", requireAuth, async (req, res) => {
       title: parsed.data.title,
       description: parsed.data.description,
       link: parsed.data.link,
+      imageUrl: parsed.data.imageUrl ?? null,
+      category: parsed.data.category ?? null,
     })
     .returning();
   res.json(serialize(created!));

@@ -56,6 +56,8 @@ export interface Ad {
   title: string;
   description: string;
   link: string;
+  imageUrl?: string | null;
+  category?: string | null;
   views: number;
   clicks: number;
   ctr: number;
@@ -75,6 +77,8 @@ export interface CreateAdInput {
   description: string;
   /** @minLength 1 */
   link: string;
+  imageUrl?: string | null;
+  category?: string | null;
 }
 
 export interface DashboardSummary {
@@ -119,3 +123,7 @@ export interface SaleNotification {
   plan: string;
   minutesAgo: number;
 }
+
+export type GetMarketplaceFeedParams = {
+  category?: string;
+};

@@ -182,6 +182,24 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/SaleNotification" }
+  /feed:
+    get:
+      operationId: getMarketplaceFeed
+      tags: [feed]
+      description: Public marketplace feed of all ads
+      parameters:
+        - in: query
+          name: category
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Public ad feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Ad" }
 components:
   schemas:
     HealthStatus:
@@ -223,6 +241,8 @@ components:
         title: { type: string }
         description: { type: string }
         link: { type: string }
+        imageUrl: { type: string, nullable: true }
+        category: { type: string, nullable: true }
         views: { type: integer }
         clicks: { type: integer }
         ctr: { type: number }
@@ -234,6 +254,8 @@ components:
         title: { type: string, minLength: 1, maxLength: 120 }
         description: { type: string, minLength: 1, maxLength: 500 }
         link: { type: string, minLength: 1 }
+        imageUrl: { type: string, nullable: true }
+        category: { type: string, nullable: true }
       required: [title, description, link]
     DashboardSummary:
       type: object

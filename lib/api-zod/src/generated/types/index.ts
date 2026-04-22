@@ -12,6 +12,7 @@ export * from "./checkoutBodyPlanId";
 export * from "./checkoutResponse";
 export * from "./createAdInput";
 export * from "./dashboardSummary";
+export * from "./getMarketplaceFeedParams";
 export * from "./healthStatus";
 export * from "./okResponse";
 export * from "./plan";

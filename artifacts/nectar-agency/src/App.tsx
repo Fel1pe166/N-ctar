@@ -17,7 +17,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import { Landing } from "@/pages/Landing";
+import { MarketplaceHome } from "@/pages/MarketplaceHome";
 import { Dashboard } from "@/pages/Dashboard";
 import { AdsList } from "@/pages/AdsList";
 import { AdDetail } from "@/pages/AdDetail";
@@ -118,19 +118,6 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
-function HomeRedirect() {
-  return (
-    <>
-      <Show when="signed-in">
-        <Redirect to="/dashboard" />
-      </Show>
-      <Show when="signed-out">
-        <Landing />
-      </Show>
-    </>
-  );
-}
-
 function Authed({ children }: { children: React.ReactNode }) {
   return (
     <>
@@ -171,7 +158,7 @@ function ClerkProviderWithRoutes() {
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
         <Switch>
-          <Route path="/" component={HomeRedirect} />
+          <Route path="/" component={MarketplaceHome} />
           <Route path="/sign-in/*?" component={SignInPage} />
           <Route path="/sign-up/*?" component={SignUpPage} />
           <Route path="/a/:id" component={PublicAd} />

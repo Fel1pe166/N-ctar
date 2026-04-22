@@ -11,6 +11,8 @@ export interface Ad {
   title: string;
   description: string;
   link: string;
+  imageUrl?: string | null;
+  category?: string | null;
   views: number;
   clicks: number;
   ctr: number;

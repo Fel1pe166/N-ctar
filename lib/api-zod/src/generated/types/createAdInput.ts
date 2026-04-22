@@ -19,4 +19,6 @@ export interface CreateAdInput {
   description: string;
   /** @minLength 1 */
   link: string;
+  imageUrl?: string | null;
+  category?: string | null;
 }

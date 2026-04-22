@@ -8,16 +8,22 @@ import {
   useGetMe,
   getGetMeQueryKey,
   getGetDashboardSummaryQueryKey,
+  getGetMarketplaceFeedQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { DashboardShell } from "@/components/layout/DashboardShell";
+import { CategoryDropdown } from "@/components/forms/CategoryDropdown";
 import {
   Plus,
   Trash2,
   Eye,
   MousePointerClick,
   X,
-  ExternalLink,
+  Rocket,
+  ImageIcon,
+  Type,
+  AlignLeft,
+  LinkIcon,
 } from "lucide-react";
 
 export function AdsList() {
@@ -27,7 +33,13 @@ export function AdsList() {
   const createAd = useCreateAd();
   const deleteAd = useDeleteAd();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", link: "" });
+  const [form, setForm] = useState<{
+    title: string;
+    description: string;
+    link: string;
+    imageUrl: string;
+    category: string | null;
+  }>({ title: "", description: "", link: "", imageUrl: "", category: null });
   const [error, setError] = useState<string | null>(null);
 
   const adsCount = ads?.length ?? 0;
@@ -38,13 +50,28 @@ export function AdsList() {
     e.preventDefault();
     setError(null);
     createAd.mutate(
-      { data: form },
+      {
+        data: {
+          title: form.title,
+          description: form.description,
+          link: form.link,
+          imageUrl: form.imageUrl.trim() || null,
+          category: form.category,
+        },
+      },
       {
         onSuccess: () => {
           qc.invalidateQueries({ queryKey: getListAdsQueryKey() });
           qc.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+          qc.invalidateQueries({ queryKey: getGetMarketplaceFeedQueryKey() });
           setOpen(false);
-          setForm({ title: "", description: "", link: "" });
+          setForm({
+            title: "",
+            description: "",
+            link: "",
+            imageUrl: "",
+            category: null,
+          });
         },
         onError: (err: unknown) => {
           const e = err as { response?: { data?: { error?: string } } };
@@ -62,6 +89,7 @@ export function AdsList() {
         onSuccess: () => {
           qc.invalidateQueries({ queryKey: getListAdsQueryKey() });
           qc.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+          qc.invalidateQueries({ queryKey: getGetMarketplaceFeedQueryKey() });
         },
       },
     );
@@ -144,30 +172,56 @@ export function AdsList() {
       )}
 
       {open && (
-        <div className="fixed inset-0 z-50 grid place-items-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="card-neon card-neon-hover w-full max-w-md p-6 relative float-up">
-            <button
-              onClick={() => setOpen(false)}
-              className="absolute top-3 right-3 h-8 w-8 grid place-items-center rounded-lg hover:bg-muted"
-              aria-label="Fechar"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <h2 className="font-display text-xl font-bold mb-1">Novo anúncio</h2>
-            <p className="text-sm text-muted-foreground mb-5">
-              Preencha os dados para começar a receber tráfego.
-            </p>
-            <form onSubmit={submit} className="space-y-4">
-              <Field
+        <div
+          className="fixed inset-0 z-50 grid place-items-start sm:place-items-center p-4 sm:p-6 bg-black/70 backdrop-blur-sm overflow-y-auto"
+          onClick={() => setOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg my-auto bg-white text-zinc-900 rounded-2xl shadow-2xl ring-1 ring-yellow-300/40 overflow-hidden float-up"
+            data-testid="modal-create-ad"
+          >
+            {/* Header */}
+            <div className="relative px-6 sm:px-8 pt-7 pb-5 border-b border-zinc-100">
+              <div className="absolute top-3 right-3">
+                <button
+                  onClick={() => setOpen(false)}
+                  className="h-9 w-9 grid place-items-center rounded-lg text-zinc-500 hover:bg-yellow-50 hover:text-zinc-900 transition"
+                  aria-label="Fechar"
+                  data-testid="button-close-modal"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-11 w-11 rounded-xl grid place-items-center bg-gradient-to-br from-yellow-400 to-orange-400 text-zinc-900 shadow-[0_8px_22px_-6px_rgba(255,180,0,0.6)]">
+                  <Rocket className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="font-display text-2xl font-black text-zinc-900">
+                    Novo anúncio
+                  </h2>
+                  <p className="text-sm text-zinc-500 mt-0.5">
+                    Preencha os dados para começar a receber tráfego.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Body */}
+            <form onSubmit={submit} className="px-6 sm:px-8 py-6 space-y-5">
+              <LightField
                 label="Título"
+                icon={Type}
                 value={form.title}
                 onChange={(v) => setForm({ ...form, title: v })}
                 placeholder="Ex: Curso completo de marketing digital"
                 testId="input-title"
                 maxLength={120}
               />
-              <Field
+              <LightField
                 label="Descrição"
+                icon={AlignLeft}
                 value={form.description}
                 onChange={(v) => setForm({ ...form, description: v })}
                 placeholder="Descreva sua oferta de forma persuasiva"
@@ -175,27 +229,130 @@ export function AdsList() {
                 maxLength={500}
                 textarea
               />
-              <Field
+              <div>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-700 uppercase tracking-wider mb-2">
+                  <Tag /> Categoria
+                </div>
+                <CategoryDropdown
+                  value={form.category}
+                  onChange={(v) => setForm({ ...form, category: v })}
+                  placeholder="Selecionar categoria"
+                  variant="light"
+                  testId="form-category"
+                />
+              </div>
+              <LightField
+                label="Imagem (URL)"
+                icon={ImageIcon}
+                value={form.imageUrl}
+                onChange={(v) => setForm({ ...form, imageUrl: v })}
+                placeholder="https://exemplo.com/imagem.jpg (opcional)"
+                testId="input-image"
+              />
+              <LightField
                 label="Link"
+                icon={LinkIcon}
                 value={form.link}
                 onChange={(v) => setForm({ ...form, link: v })}
                 placeholder="https://seusite.com/oferta"
                 testId="input-link"
               />
+
+              {error && (
+                <div className="text-sm px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700">
+                  {error}
+                </div>
+              )}
+
               <button
                 type="submit"
-                disabled={createAd.isPending || !form.title || !form.description || !form.link}
+                disabled={
+                  createAd.isPending ||
+                  !form.title ||
+                  !form.description ||
+                  !form.link
+                }
                 data-testid="button-submit-ad"
-                className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground font-bold neon-glow neon-btn disabled:opacity-60 disabled:cursor-not-allowed"
+                className="group relative overflow-hidden w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-gradient-to-r from-yellow-400 to-orange-400 text-zinc-900 font-black text-sm shadow-[0_10px_28px_-6px_rgba(255,180,0,0.55)] hover:shadow-[0_14px_38px_-4px_rgba(255,180,0,0.75)] hover:scale-[1.02] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
-                {createAd.isPending ? "Criando..." : "Publicar anúncio"}
-                <ExternalLink className="h-4 w-4" />
+                <span className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/55 to-transparent" />
+                <Rocket className="h-4 w-4 relative z-10" />
+                <span className="relative z-10">
+                  {createAd.isPending ? "Publicando..." : "Publicar anúncio"}
+                </span>
               </button>
             </form>
           </div>
         </div>
       )}
     </DashboardShell>
+  );
+}
+
+function Tag() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" />
+      <circle cx="7.5" cy="7.5" r="0.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+function LightField({
+  label,
+  icon: Icon,
+  value,
+  onChange,
+  placeholder,
+  testId,
+  maxLength,
+  textarea,
+}: {
+  label: string;
+  icon?: typeof Type;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  testId?: string;
+  maxLength?: number;
+  textarea?: boolean;
+}) {
+  return (
+    <div>
+      <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-700 uppercase tracking-wider mb-2">
+        {Icon && <Icon className="h-3.5 w-3.5" />}
+        {label}
+      </div>
+      {textarea ? (
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          maxLength={maxLength}
+          data-testid={testId}
+          rows={4}
+          className="w-full px-4 py-3 rounded-xl bg-white border-2 border-zinc-200 text-zinc-900 placeholder:text-zinc-400 outline-none transition-all duration-300 focus:border-yellow-400 focus:shadow-[0_0_0_4px_rgba(255,215,0,0.18)] resize-none"
+        />
+      ) : (
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          maxLength={maxLength}
+          data-testid={testId}
+          className="w-full px-4 py-3 rounded-xl bg-white border-2 border-zinc-200 text-zinc-900 placeholder:text-zinc-400 outline-none transition-all duration-300 focus:border-yellow-400 focus:shadow-[0_0_0_4px_rgba(255,215,0,0.18)]"
+        />
+      )}
+    </div>
   );
 }
 

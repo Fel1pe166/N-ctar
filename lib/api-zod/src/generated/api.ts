@@ -35,6 +35,8 @@ export const ListAdsResponseItem = zod.object({
   title: zod.string(),
   description: zod.string(),
   link: zod.string(),
+  imageUrl: zod.string().nullish(),
+  category: zod.string().nullish(),
   views: zod.number(),
   clicks: zod.number(),
   ctr: zod.number(),
@@ -50,6 +52,8 @@ export const CreateAdBody = zod.object({
   title: zod.string().min(1).max(createAdBodyTitleMax),
   description: zod.string().min(1).max(createAdBodyDescriptionMax),
   link: zod.string().min(1),
+  imageUrl: zod.string().nullish(),
+  category: zod.string().nullish(),
 });
 
 export const CreateAdResponse = zod.object({
@@ -57,6 +61,8 @@ export const CreateAdResponse = zod.object({
   title: zod.string(),
   description: zod.string(),
   link: zod.string(),
+  imageUrl: zod.string().nullish(),
+  category: zod.string().nullish(),
   views: zod.number(),
   clicks: zod.number(),
   ctr: zod.number(),
@@ -72,6 +78,8 @@ export const GetAdResponse = zod.object({
   title: zod.string(),
   description: zod.string(),
   link: zod.string(),
+  imageUrl: zod.string().nullish(),
+  category: zod.string().nullish(),
   views: zod.number(),
   clicks: zod.number(),
   ctr: zod.number(),
@@ -141,4 +149,27 @@ export const GetNotificationFeedResponseItem = zod.object({
 });
 export const GetNotificationFeedResponse = zod.array(
   GetNotificationFeedResponseItem,
+);
+
+/**
+ * Public marketplace feed of all ads
+ */
+export const GetMarketplaceFeedQueryParams = zod.object({
+  category: zod.coerce.string().optional(),
+});
+
+export const GetMarketplaceFeedResponseItem = zod.object({
+  id: zod.string(),
+  title: zod.string(),
+  description: zod.string(),
+  link: zod.string(),
+  imageUrl: zod.string().nullish(),
+  category: zod.string().nullish(),
+  views: zod.number(),
+  clicks: zod.number(),
+  ctr: zod.number(),
+  createdAt: zod.string(),
+});
+export const GetMarketplaceFeedResponse = zod.array(
+  GetMarketplaceFeedResponseItem,
 );

@@ -12,6 +12,8 @@ export const adsTable = pgTable("ads", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   link: text("link").notNull(),
+  imageUrl: text("image_url"),
+  category: text("category"),
   views: integer("views").notNull().default(0),
   clicks: integer("clicks").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
