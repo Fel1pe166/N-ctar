@@ -1,36 +1,274 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Néctar Agency API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: user
+  - name: ads
+  - name: dashboard
+  - name: plans
+  - name: payment
+  - name: notifications
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
-      summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
           content:
             application/json:
+              schema: { $ref: "#/components/schemas/HealthStatus" }
+  /me:
+    get:
+      operationId: getMe
+      tags: [user]
+      responses:
+        "200":
+          description: Current user profile
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+  /plans:
+    get:
+      operationId: listPlans
+      tags: [plans]
+      responses:
+        "200":
+          description: Available plans
+          content:
+            application/json:
               schema:
-                $ref: "#/components/schemas/HealthStatus"
+                type: array
+                items: { $ref: "#/components/schemas/Plan" }
+  /ads:
+    get:
+      operationId: listAds
+      tags: [ads]
+      responses:
+        "200":
+          description: Current user's ads
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Ad" }
+    post:
+      operationId: createAd
+      tags: [ads]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateAdInput" }
+      responses:
+        "200":
+          description: Created ad
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ad" }
+  /ads/{id}:
+    get:
+      operationId: getAd
+      tags: [ads]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Ad details
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ad" }
+    delete:
+      operationId: deleteAd
+      tags: [ads]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+  /ads/{id}/view:
+    post:
+      operationId: registerView
+      tags: [ads]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: View registered
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+  /ads/{id}/click:
+    post:
+      operationId: registerClick
+      tags: [ads]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Click registered
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardSummary" }
+  /dashboard/timeseries:
+    get:
+      operationId: getDashboardTimeseries
+      tags: [dashboard]
+      responses:
+        "200":
+          description: Daily views and clicks
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/TimeseriesPoint" }
+  /payment/checkout:
+    post:
+      operationId: createCheckout
+      tags: [payment]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CheckoutBody" }
+      responses:
+        "200":
+          description: Checkout intent
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CheckoutResponse" }
+  /notifications/feed:
+    get:
+      operationId: getNotificationFeed
+      tags: [notifications]
+      description: Fake live sales feed (random names + plans)
+      responses:
+        "200":
+          description: Recent purchases feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/SaleNotification" }
 components:
   schemas:
     HealthStatus:
       type: object
       properties:
-        status:
-          type: string
-      required:
-        - status
-
+        status: { type: string }
+      required: [status]
+    OkResponse:
+      type: object
+      properties:
+        ok: { type: boolean }
+      required: [ok]
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        email: { type: string }
+        name: { type: string }
+        plan: { type: string, enum: [free, basico, medio, avancado, ilimitado] }
+        adsLimit: { type: integer }
+        createdAt: { type: string }
+      required: [id, plan, adsLimit, createdAt]
+    Plan:
+      type: object
+      properties:
+        id: { type: string, enum: [free, basico, medio, avancado, ilimitado] }
+        name: { type: string }
+        priceBRL: { type: number }
+        adsLimit: { type: integer }
+        features:
+          type: array
+          items: { type: string }
+        highlight: { type: boolean }
+      required: [id, name, priceBRL, adsLimit, features, highlight]
+    Ad:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        link: { type: string }
+        views: { type: integer }
+        clicks: { type: integer }
+        ctr: { type: number }
+        createdAt: { type: string }
+      required: [id, title, description, link, views, clicks, ctr, createdAt]
+    CreateAdInput:
+      type: object
+      properties:
+        title: { type: string, minLength: 1, maxLength: 120 }
+        description: { type: string, minLength: 1, maxLength: 500 }
+        link: { type: string, minLength: 1 }
+      required: [title, description, link]
+    DashboardSummary:
+      type: object
+      properties:
+        totalViews: { type: integer }
+        totalClicks: { type: integer }
+        ctr: { type: number }
+        totalAds: { type: integer }
+        adsLimit: { type: integer }
+        plan: { type: string }
+      required: [totalViews, totalClicks, ctr, totalAds, adsLimit, plan]
+    TimeseriesPoint:
+      type: object
+      properties:
+        date: { type: string }
+        views: { type: integer }
+        clicks: { type: integer }
+      required: [date, views, clicks]
+    CheckoutBody:
+      type: object
+      properties:
+        planId: { type: string, enum: [free, basico, medio, avancado, ilimitado] }
+      required: [planId]
+    CheckoutResponse:
+      type: object
+      properties:
+        ok: { type: boolean }
+        plan: { type: string }
+        message: { type: string }
+      required: [ok, plan, message]
+    SaleNotification:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        plan: { type: string }
+        minutesAgo: { type: integer }
+      required: [id, name, plan, minutesAgo]

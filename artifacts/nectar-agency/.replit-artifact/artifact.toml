@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Néctar Agency"
+version = "1.0.0"
+id = "artifacts/nectar-agency"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19070
+
+[services.development]
+run = "pnpm --filter @workspace/nectar-agency run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/nectar-agency", "run", "build" ]
+publicDir = "artifacts/nectar-agency/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19070"
+BASE_PATH = "/"
