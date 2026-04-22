@@ -8,9 +8,9 @@ import {
   LifeBuoy,
   LogOut,
   Menu,
-  X,
 } from "lucide-react";
 import { useState } from "react";
+import { MobileDrawer } from "./MobileDrawer";
 
 interface NavItem {
   href: string;
@@ -133,24 +133,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       </div>
 
       {/* Mobile drawer */}
-      {mobileOpen && (
-        <div className="md:hidden fixed inset-0 z-40">
-          <div
-            className="absolute inset-0 bg-black/70"
-            onClick={() => setMobileOpen(false)}
-          />
-          <aside className="absolute inset-y-0 left-0 w-72 bg-sidebar border-r border-primary/15 float-up">
-            <button
-              onClick={() => setMobileOpen(false)}
-              className="absolute top-3 right-3 h-9 w-9 grid place-items-center rounded-lg hover:bg-muted"
-              aria-label="Fechar"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <SidebarContent />
-          </aside>
-        </div>
-      )}
+      <MobileDrawer open={mobileOpen} onClose={() => setMobileOpen(false)} />
 
       <main className="flex-1 md:ml-64 pt-14 md:pt-0">
         <div className="px-4 md:px-10 py-8 max-w-7xl mx-auto w-full">

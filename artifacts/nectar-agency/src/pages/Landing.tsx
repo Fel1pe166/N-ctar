@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { SignInButton, SignUpButton } from "@clerk/react";
 import { Link } from "wouter";
 import { useListPlans, getListPlansQueryKey } from "@workspace/api-client-react";
 import { Particles } from "@/components/effects/Particles";
+import { MobileDrawer } from "@/components/layout/MobileDrawer";
 import {
   Zap,
   BarChart3,
@@ -11,6 +13,7 @@ import {
   Sparkles,
   ShieldCheck,
   Trophy,
+  Menu,
 } from "lucide-react";
 
 const BENEFITS = [
@@ -35,9 +38,11 @@ export function Landing() {
   const { data: plans } = useListPlans({
     query: { queryKey: getListPlansQueryKey() },
   });
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
     <div className="relative min-h-screen overflow-hidden">
+      <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
       {/* Top nav */}
       <header className="relative z-30 max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5">
@@ -51,7 +56,7 @@ export function Landing() {
         </Link>
         <nav className="hidden md:flex items-center gap-7 text-sm text-foreground/80">
           <a href="#beneficios" className="hover:text-primary transition">Benefícios</a>
-          <a href="#planos" className="hover:text-primary transition">Planos</a>
+          <Link href="/plans" className="hover:text-primary transition">Planos VIP</Link>
           <a href="#sobre" className="hover:text-primary transition">Sobre</a>
         </nav>
         <div className="flex items-center gap-2">
@@ -66,11 +71,19 @@ export function Landing() {
           <SignUpButton mode="modal">
             <button
               data-testid="button-signup-header"
-              className="px-4 py-2 text-sm font-bold rounded-lg bg-primary text-primary-foreground neon-glow neon-btn"
+              className="hidden sm:inline-flex px-4 py-2 text-sm font-bold rounded-lg bg-gradient-to-r from-yellow-400 to-orange-400 text-zinc-900 shadow-[0_8px_22px_-6px_rgba(255,180,0,0.55)] hover:scale-[1.03] transition-all"
             >
               Criar conta
             </button>
           </SignUpButton>
+          <button
+            onClick={() => setDrawerOpen(true)}
+            data-testid="button-open-drawer"
+            className="md:hidden h-10 w-10 grid place-items-center rounded-lg border border-primary/30 hover:bg-primary/10 transition"
+            aria-label="Abrir menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
         </div>
       </header>
 
