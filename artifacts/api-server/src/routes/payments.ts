@@ -6,6 +6,7 @@ import { requireAuth, type AuthedRequest } from "../lib/auth";
 import { requireAdmin } from "../lib/admin";
 import { PLANS, PLAN_LIMITS } from "../lib/userPlan";
 import { getPixKey, getPixQrUrl } from "../lib/pix";
+import { checkAdminCredentials, createAdminToken } from "../lib/adminToken";
 
 const router: IRouter = Router();
 
@@ -24,6 +25,18 @@ function serialize(p: Payment) {
     reviewedAt: p.reviewedAt ? p.reviewedAt.toISOString() : null,
   };
 }
+
+// Admin activation: validate name + password, return signed token
+router.post("/admin/activate", async (req, res) => {
+  const name = typeof req.body?.name === "string" ? req.body.name : "";
+  const password = typeof req.body?.password === "string" ? req.body.password : "";
+  if (!checkAdminCredentials(name, password)) {
+    res.status(401).json({ error: "Nome ou senha inválidos." });
+    return;
+  }
+  const token = createAdminToken();
+  res.json({ token, expiresInSec: 60 * 60 * 8 });
+});
 
 // Public PIX config (key + QR)
 router.get("/pix/config", (_req, res) => {

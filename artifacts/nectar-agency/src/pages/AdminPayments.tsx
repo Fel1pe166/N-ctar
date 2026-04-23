@@ -1,13 +1,9 @@
-import { useState, useEffect, type FormEvent } from "react";
-import { Link } from "wouter";
-import { Show } from "@clerk/react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import {
   useListAdminPayments,
   getListAdminPaymentsQueryKey,
   useApprovePayment,
   useRejectPayment,
-  useGetMe,
-  getGetMeQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { DashboardShell } from "@/components/layout/DashboardShell";
@@ -20,12 +16,13 @@ import {
   Mail,
   ExternalLink,
   Filter,
-  AlertTriangle,
   Lock,
+  User as UserIcon,
+  Sparkles,
+  KeyRound,
+  HelpCircle,
 } from "lucide-react";
-
-const ADMIN_GATE_KEY = "nectar-admin-gate";
-const ADMIN_GATE_PASSWORD = "adminnectar";
+import { getAdminToken, setAdminToken } from "@/lib/adminAuth";
 
 const STATUS_TABS: Array<{
   id: "pending" | "approved" | "rejected" | "all";
@@ -38,112 +35,227 @@ const STATUS_TABS: Array<{
 ];
 
 export function AdminPayments() {
-  const [unlocked, setUnlocked] = useState(false);
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState(false);
+  const [unlocked, setUnlocked] = useState<boolean>(() => !!getAdminToken());
 
   useEffect(() => {
-    if (sessionStorage.getItem(ADMIN_GATE_KEY) === "1") {
-      setUnlocked(true);
-    }
+    if (getAdminToken()) setUnlocked(true);
   }, []);
 
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (password === ADMIN_GATE_PASSWORD) {
-      sessionStorage.setItem(ADMIN_GATE_KEY, "1");
-      setUnlocked(true);
-      setError(false);
-    } else {
-      setError(true);
-      setPassword("");
-    }
-  }
-
   if (!unlocked) {
-    return (
-      <div className="min-h-screen bg-zinc-950 grid place-items-center px-4">
-        <form
-          onSubmit={handleSubmit}
-          className="w-full max-w-sm card-neon p-8 text-center"
-        >
-          <div className="h-14 w-14 mx-auto rounded-full bg-primary/15 grid place-items-center text-primary mb-4 neon-glow-soft">
-            <Lock className="h-6 w-6" />
-          </div>
-          <h1 className="font-display text-xl font-bold text-zinc-100">
-            Área restrita
-          </h1>
-          <p className="text-sm text-zinc-400 mt-2">
-            Digite a senha de acesso para continuar.
-          </p>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setError(false);
-            }}
-            autoFocus
-            placeholder="Senha"
-            className="mt-6 w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-primary focus:ring-2 focus:ring-primary/40 transition"
-          />
-          {error && (
-            <p className="text-xs text-red-400 mt-2 text-left">
-              Senha incorreta.
-            </p>
-          )}
-          <button
-            type="submit"
-            className="mt-5 w-full py-3 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-400 text-zinc-900 font-bold text-sm hover:scale-[1.01] transition"
-          >
-            Entrar
-          </button>
-        </form>
-      </div>
-    );
+    return <AdminActivation onActivated={() => setUnlocked(true)} />;
+  }
+  return <AdminPaymentsPanel />;
+}
+
+function AdminActivation({ onActivated }: { onActivated: () => void }) {
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [shake, setShake] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const cardRef = useRef<HTMLFormElement>(null);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/activate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), password }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error || "Credenciais inválidas.");
+      }
+      const data = (await res.json()) as { token: string };
+      setAdminToken(data.token);
+      setSuccess(true);
+      setTimeout(() => onActivated(), 1500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Falha na ativação.");
+      setPassword("");
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
-    <Show when="signed-in">
-      <AdminPaymentsAuthed />
-    </Show>
+    <div className="relative min-h-screen overflow-hidden bg-zinc-950">
+      <div className="absolute inset-0 admin-grid opacity-60 pointer-events-none" />
+      <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[420px] w-[420px] rounded-full bg-yellow-400/10 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-200px] right-[-100px] h-[420px] w-[420px] rounded-full bg-orange-500/10 blur-[120px] pointer-events-none" />
+
+      <div className="relative min-h-screen grid place-items-center px-4 py-10">
+        <form
+          ref={cardRef}
+          onSubmit={handleSubmit}
+          data-testid="admin-activation-form"
+          className={`w-full max-w-md card-neon p-8 admin-fade-in ${
+            shake ? "animate-shake" : ""
+          }`}
+        >
+          <div className="flex flex-col items-center text-center">
+            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-400 text-zinc-900 grid place-items-center neon-glow-soft mb-4">
+              <ShieldCheck className="h-8 w-8" />
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-yellow-400/10 border border-yellow-400/30 text-[11px] font-bold text-yellow-300 uppercase tracking-wider">
+              <Sparkles className="h-3 w-3" />
+              Sistema Néctar
+            </div>
+            <h1 className="font-display text-2xl font-black text-zinc-100 mt-4 leading-tight">
+              Ativação do Sistema
+              <br />
+              <span className="bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
+                Administrativo
+              </span>
+            </h1>
+            <p className="text-xs text-zinc-400 mt-2 max-w-xs">
+              Confirme sua identidade para liberar o painel de aprovações.
+            </p>
+          </div>
+
+          <div className="mt-7 space-y-4">
+            <Field
+              icon={<UserIcon className="h-4 w-4" />}
+              label="O nome do admin qual é?"
+              hint="Resposta esperada: Felipe"
+            >
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setError(null);
+                }}
+                autoFocus
+                placeholder="Felipe"
+                autoComplete="off"
+                data-testid="input-admin-name"
+                className="w-full px-3 py-2.5 rounded-lg bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-yellow-400/60 focus:ring-2 focus:ring-yellow-400/30 transition"
+              />
+            </Field>
+
+            <Field
+              icon={<KeyRound className="h-4 w-4" />}
+              label="Senha de acesso"
+            >
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError(null);
+                }}
+                placeholder="••••••••"
+                autoComplete="new-password"
+                data-testid="input-admin-password"
+                className="w-full px-3 py-2.5 rounded-lg bg-zinc-900/80 border border-zinc-800 text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-yellow-400/60 focus:ring-2 focus:ring-yellow-400/30 transition"
+              />
+            </Field>
+
+            <div className="rounded-lg bg-zinc-900/60 border border-yellow-400/20 p-3.5">
+              <div className="flex items-center gap-2 text-[11px] font-bold text-yellow-300 uppercase tracking-wider">
+                <HelpCircle className="h-3.5 w-3.5" />
+                Por que o nome Néctar?
+              </div>
+              <p className="mt-2 text-sm text-zinc-200 italic">
+                "Néctar é a próxima empresa da evolução."
+              </p>
+            </div>
+
+            {error && (
+              <div
+                role="alert"
+                data-testid="admin-error"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/40 text-xs text-red-300"
+              >
+                <X className="h-3.5 w-3.5 flex-none" />
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              data-testid="button-activate-admin"
+              className="group relative w-full overflow-hidden py-3.5 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-400 text-zinc-900 font-display font-black text-sm uppercase tracking-wide hover:scale-[1.01] active:scale-[0.99] transition disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_8px_30px_-8px_rgba(255,180,0,0.7)]"
+            >
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                <Lock className="h-4 w-4" />
+                {submitting ? "Validando..." : "Ativar Admin"}
+              </span>
+              <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+            </button>
+          </div>
+
+          <p className="text-[10px] text-zinc-600 text-center mt-5 uppercase tracking-wider">
+            Acesso protegido • validação no servidor
+          </p>
+        </form>
+      </div>
+
+      {success && <SuccessOverlay />}
+    </div>
   );
 }
 
-function AdminPaymentsAuthed() {
-  const { data: me, isLoading: meLoading } = useGetMe({
-    query: { queryKey: getGetMeQueryKey() },
-  });
+function Field({
+  icon,
+  label,
+  hint,
+  children,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block">
+      <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-300 mb-1.5">
+        <span className="text-yellow-400">{icon}</span>
+        {label}
+      </div>
+      {children}
+      {hint && <div className="text-[10px] text-zinc-500 mt-1">{hint}</div>}
+    </label>
+  );
+}
+
+function SuccessOverlay() {
+  return (
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-zinc-950/85 backdrop-blur-sm admin-fade-in"
+      data-testid="admin-success-overlay"
+    >
+      <div className="card-neon green-glow admin-success-pop p-10 max-w-sm w-[90%] text-center">
+        <div className="h-16 w-16 mx-auto rounded-full bg-green-500/20 grid place-items-center text-green-400 mb-4 ring-2 ring-green-500/50">
+          <Check className="h-8 w-8" strokeWidth={3} />
+        </div>
+        <h2 className="font-display text-xl font-black text-zinc-100">
+          Admin ativado com sucesso
+        </h2>
+        <p className="text-xs text-zinc-400 mt-2">
+          Carregando painel administrativo...
+        </p>
+        <div className="mt-6 h-1.5 w-full rounded-full bg-zinc-800 overflow-hidden">
+          <div className="h-full admin-progress-bar bg-gradient-to-r from-green-400 to-emerald-400 shadow-[0_0_15px_rgba(34,197,94,0.6)]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminPaymentsPanel() {
   const [status, setStatus] = useState<"pending" | "approved" | "rejected" | "all">(
     "pending",
   );
-
-  if (meLoading) {
-    return <DashboardShell><div className="text-sm text-muted-foreground">Carregando...</div></DashboardShell>;
-  }
-
-  if (me?.role !== "admin") {
-    return (
-      <DashboardShell>
-        <div className="max-w-md mx-auto card-neon p-10 text-center">
-          <div className="h-14 w-14 mx-auto rounded-full bg-red-500/15 grid place-items-center text-red-400 mb-4">
-            <AlertTriangle className="h-6 w-6" />
-          </div>
-          <h2 className="font-display text-xl font-bold">Acesso restrito</h2>
-          <p className="text-sm text-muted-foreground mt-2">
-            Esta página é exclusiva do administrador.
-          </p>
-          <Link
-            href="/dashboard"
-            className="inline-block mt-5 px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-400 text-zinc-900 font-bold text-sm"
-          >
-            Voltar
-          </Link>
-        </div>
-      </DashboardShell>
-    );
-  }
-
   return (
     <DashboardShell>
       <PanelHeader />

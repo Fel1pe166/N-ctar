@@ -298,3 +298,52 @@
   color: rgba(255, 255, 255, 0.45);
   opacity: 1;
 }
+
+/* Admin activation animations */
+@keyframes shake-x {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-10px); }
+  40% { transform: translateX(10px); }
+  60% { transform: translateX(-7px); }
+  80% { transform: translateX(7px); }
+}
+.animate-shake { animation: shake-x 0.45s cubic-bezier(.36,.07,.19,.97) both; }
+
+@keyframes admin-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.admin-fade-in { animation: admin-fade-in 0.4s ease-out both; }
+
+@keyframes admin-success-pop {
+  0% { opacity: 0; transform: scale(.9); }
+  60% { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.admin-success-pop { animation: admin-success-pop 0.5s cubic-bezier(.2,.8,.2,1) both; }
+
+@keyframes admin-progress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+.admin-progress-bar { animation: admin-progress 1.4s ease-out forwards; }
+
+.green-glow {
+  box-shadow:
+    0 0 0 1px rgba(34, 197, 94, 0.5),
+    0 0 30px rgba(34, 197, 94, 0.4),
+    0 0 80px rgba(34, 197, 94, 0.25),
+    inset 0 0 30px rgba(34, 197, 94, 0.08);
+}
+
+@keyframes admin-grid-drift {
+  from { background-position: 0 0; }
+  to { background-position: 60px 60px; }
+}
+.admin-grid {
+  background-image:
+    linear-gradient(rgba(255, 215, 0, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 215, 0, 0.06) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: admin-grid-drift 18s linear infinite;
+}
