@@ -186,9 +186,7 @@ function ClerkProviderWithRoutes() {
             </Authed>
           </Route>
           <Route path="/admin/payments">
-            <Authed>
-              <AdminPayments />
-            </Authed>
+            <AdminPayments />
           </Route>
           <Route component={NotFound} />
         </Switch>

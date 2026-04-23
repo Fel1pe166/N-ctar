@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { Link } from "wouter";
 import { Show } from "@clerk/react";
 import {
@@ -21,7 +21,11 @@ import {
   ExternalLink,
   Filter,
   AlertTriangle,
+  Lock,
 } from "lucide-react";
+
+const ADMIN_GATE_KEY = "nectar-admin-gate";
+const ADMIN_GATE_PASSWORD = "adminnectar";
 
 const STATUS_TABS: Array<{
   id: "pending" | "approved" | "rejected" | "all";
@@ -34,6 +38,71 @@ const STATUS_TABS: Array<{
 ];
 
 export function AdminPayments() {
+  const [unlocked, setUnlocked] = useState(false);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (sessionStorage.getItem(ADMIN_GATE_KEY) === "1") {
+      setUnlocked(true);
+    }
+  }, []);
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (password === ADMIN_GATE_PASSWORD) {
+      sessionStorage.setItem(ADMIN_GATE_KEY, "1");
+      setUnlocked(true);
+      setError(false);
+    } else {
+      setError(true);
+      setPassword("");
+    }
+  }
+
+  if (!unlocked) {
+    return (
+      <div className="min-h-screen bg-zinc-950 grid place-items-center px-4">
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-sm card-neon p-8 text-center"
+        >
+          <div className="h-14 w-14 mx-auto rounded-full bg-primary/15 grid place-items-center text-primary mb-4 neon-glow-soft">
+            <Lock className="h-6 w-6" />
+          </div>
+          <h1 className="font-display text-xl font-bold text-zinc-100">
+            Área restrita
+          </h1>
+          <p className="text-sm text-zinc-400 mt-2">
+            Digite a senha de acesso para continuar.
+          </p>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setError(false);
+            }}
+            autoFocus
+            placeholder="Senha"
+            className="mt-6 w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-primary focus:ring-2 focus:ring-primary/40 transition"
+          />
+          {error && (
+            <p className="text-xs text-red-400 mt-2 text-left">
+              Senha incorreta.
+            </p>
+          )}
+          <button
+            type="submit"
+            className="mt-5 w-full py-3 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-400 text-zinc-900 font-bold text-sm hover:scale-[1.01] transition"
+          >
+            Entrar
+          </button>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <Show when="signed-in">
       <AdminPaymentsAuthed />
