@@ -23,13 +23,65 @@ export const UserPlan = {
   ilimitado: "ilimitado",
 } as const;
 
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
+
+export const UserRole = {
+  user: "user",
+  admin: "admin",
+} as const;
+
 export interface User {
   id: string;
   email?: string;
   name?: string;
   plan: UserPlan;
   adsLimit: number;
+  role: UserRole;
   createdAt: string;
+}
+
+export interface PixConfig {
+  pixKey: string;
+  qrUrl: string;
+  receiverName?: string;
+}
+
+export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
+
+export const PaymentStatus = {
+  pending: "pending",
+  approved: "approved",
+  rejected: "rejected",
+} as const;
+
+export interface Payment {
+  id: string;
+  userId: string;
+  userEmail?: string | null;
+  userName?: string | null;
+  plan: string;
+  amountBRL: number;
+  pixKey: string;
+  proofUrl: string;
+  status: PaymentStatus;
+  createdAt: string;
+  reviewedAt?: string | null;
+}
+
+export type CreatePaymentInputPlanId =
+  (typeof CreatePaymentInputPlanId)[keyof typeof CreatePaymentInputPlanId];
+
+export const CreatePaymentInputPlanId = {
+  basico: "basico",
+  medio: "medio",
+  avancado: "avancado",
+  ilimitado: "ilimitado",
+} as const;
+
+export interface CreatePaymentInput {
+  planId: CreatePaymentInputPlanId;
+  /** @minLength 1 */
+  proofUrl: string;
 }
 
 export type PlanId = (typeof PlanId)[keyof typeof PlanId];
@@ -123,6 +175,20 @@ export interface SaleNotification {
   plan: string;
   minutesAgo: number;
 }
+
+export type ListAdminPaymentsParams = {
+  status?: ListAdminPaymentsStatus;
+};
+
+export type ListAdminPaymentsStatus =
+  (typeof ListAdminPaymentsStatus)[keyof typeof ListAdminPaymentsStatus];
+
+export const ListAdminPaymentsStatus = {
+  pending: "pending",
+  approved: "approved",
+  rejected: "rejected",
+  all: "all",
+} as const;
 
 export type GetMarketplaceFeedParams = {
   category?: string;

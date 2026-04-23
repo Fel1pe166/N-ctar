@@ -5,6 +5,7 @@ import plansRouter from "./plans";
 import adsRouter from "./ads";
 import dashboardRouter from "./dashboard";
 import paymentRouter from "./payment";
+import paymentsRouter from "./payments";
 import notificationsRouter from "./notifications";
 
 const router: IRouter = Router();
@@ -15,6 +16,7 @@ router.use(plansRouter);
 router.use(adsRouter);
 router.use(dashboardRouter);
 router.use(paymentRouter);
+router.use(paymentsRouter);
 router.use(notificationsRouter);
 
 export default router;

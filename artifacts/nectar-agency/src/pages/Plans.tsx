@@ -8,8 +8,8 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { Show } from "@clerk/react";
-import { Link } from "wouter";
+import { Show, useUser } from "@clerk/react";
+import { Link, useLocation } from "wouter";
 import { MobileDrawer } from "@/components/layout/MobileDrawer";
 import { Check, Crown, Sparkles, Menu } from "lucide-react";
 import { useState } from "react";
@@ -100,6 +100,8 @@ function Header() {
 
 function PlansGrid() {
   const qc = useQueryClient();
+  const [, navigate] = useLocation();
+  const { isSignedIn } = useUser();
   const { data: plans } = useListPlans({
     query: { queryKey: getListPlansQueryKey() },
   });
@@ -107,18 +109,26 @@ function PlansGrid() {
   const checkout = useCreateCheckout();
   const [toast, setToast] = useState<string | null>(null);
 
-  const subscribe = (planId: string) => {
-    checkout.mutate(
-      { data: { planId: planId as never } },
-      {
-        onSuccess: (res) => {
-          setToast(res.message);
-          qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
-          qc.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
-          setTimeout(() => setToast(null), 4000);
+  const subscribe = (planId: string, priceBRL: number) => {
+    if (!isSignedIn) {
+      navigate("/sign-in");
+      return;
+    }
+    if (priceBRL <= 0) {
+      checkout.mutate(
+        { data: { planId: planId as never } },
+        {
+          onSuccess: (res) => {
+            setToast(res.message);
+            qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
+            qc.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+            setTimeout(() => setToast(null), 4000);
+          },
         },
-      },
-    );
+      );
+      return;
+    }
+    navigate(`/pix/${planId}`);
   };
 
   return (
@@ -190,7 +200,7 @@ function PlansGrid() {
 
                 <button
                   disabled={isCurrent || checkout.isPending}
-                  onClick={() => subscribe(p.id)}
+                  onClick={() => subscribe(p.id, p.priceBRL)}
                   data-testid={`button-subscribe-${p.id}`}
                   className={`mt-7 group/btn relative overflow-hidden inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed ${
                     popular || p.id === "ilimitado"

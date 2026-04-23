@@ -14,6 +14,8 @@ tags:
   - name: plans
   - name: payment
   - name: notifications
+  - name: feed
+  - name: admin
 paths:
   /healthz:
     get:
@@ -35,6 +37,89 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/User" }
+  /pix/config:
+    get:
+      operationId: getPixConfig
+      tags: [payment]
+      responses:
+        "200":
+          description: PIX checkout configuration
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PixConfig" }
+  /payments:
+    post:
+      operationId: createPayment
+      tags: [payment]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreatePaymentInput" }
+      responses:
+        "200":
+          description: Created payment
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Payment" }
+    get:
+      operationId: listMyPayments
+      tags: [payment]
+      responses:
+        "200":
+          description: Current user payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Payment" }
+  /admin/payments:
+    get:
+      operationId: listAdminPayments
+      tags: [admin]
+      parameters:
+        - in: query
+          name: status
+          required: false
+          schema: { type: string, enum: [pending, approved, rejected, all] }
+      responses:
+        "200":
+          description: All payments for admin
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Payment" }
+  /admin/payments/{id}/approve:
+    post:
+      operationId: approvePayment
+      tags: [admin]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Approved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Payment" }
+  /admin/payments/{id}/reject:
+    post:
+      operationId: rejectPayment
+      tags: [admin]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Rejected
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Payment" }
   /plans:
     get:
       operationId: listPlans
@@ -220,8 +305,37 @@ components:
         name: { type: string }
         plan: { type: string, enum: [free, basico, medio, avancado, ilimitado] }
         adsLimit: { type: integer }
+        role: { type: string, enum: [user, admin] }
         createdAt: { type: string }
-      required: [id, plan, adsLimit, createdAt]
+      required: [id, plan, adsLimit, role, createdAt]
+    PixConfig:
+      type: object
+      properties:
+        pixKey: { type: string }
+        qrUrl: { type: string }
+        receiverName: { type: string }
+      required: [pixKey, qrUrl]
+    Payment:
+      type: object
+      properties:
+        id: { type: string }
+        userId: { type: string }
+        userEmail: { type: string, nullable: true }
+        userName: { type: string, nullable: true }
+        plan: { type: string }
+        amountBRL: { type: number }
+        pixKey: { type: string }
+        proofUrl: { type: string }
+        status: { type: string, enum: [pending, approved, rejected] }
+        createdAt: { type: string }
+        reviewedAt: { type: string, nullable: true }
+      required: [id, userId, plan, amountBRL, pixKey, proofUrl, status, createdAt]
+    CreatePaymentInput:
+      type: object
+      properties:
+        planId: { type: string, enum: [basico, medio, avancado, ilimitado] }
+        proofUrl: { type: string, minLength: 1 }
+      required: [planId, proofUrl]
     Plan:
       type: object
       properties:

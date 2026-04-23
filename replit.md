@@ -38,7 +38,9 @@ Premium PT-BR ad platform with dark gamer aesthetic (black + neon yellow).
 - **Ad tracking**: anonymous `POST /ads/:id/view` and `/click` increment counters; CTR computed in API
 
 ### Backend (artifacts/api-server)
-- Routes: `/me`, `/plans`, `/ads` CRUD, `/ads/:id/view`, `/ads/:id/click`, `/dashboard/summary`, `/dashboard/timeseries`, `/payment/checkout`, `/notifications/feed`, `/feed` (public marketplace, optional `?category=`)
+- Routes: `/me`, `/plans`, `/ads` CRUD, `/ads/:id/view`, `/ads/:id/click`, `/dashboard/summary`, `/dashboard/timeseries`, `/payment/checkout`, `/notifications/feed`, `/feed` (public marketplace, optional `?category=`), `/pix/config`, `/payments` (POST create + GET own), `/admin/payments`, `/admin/payments/:id/approve|reject`
+- **PIX manual flow**: `PIX_KEY` env var → public QR via `api.qrserver.com`. Users upload comprovante (data URL stored in `payments.proofUrl`, max ~4.5MB). Status: `pending → approved | rejected`. Approving updates user plan + adsLimit.
+- **Admin role**: `ADMIN_EMAIL` env var. `ensureUser` sets `users.role='admin'` when Clerk email matches (case-insensitive). `requireAdmin` middleware in `lib/admin.ts`. UI shows extra "Admin" nav entry in DashboardShell sidebar + MobileDrawer.
 - Ads have `imageUrl` + `category` (15 fixed categories: Discord, WhatsApp, Facebook, Site, Twitter, Pinterest, Instagram, Kwai, TikTok, Cursos, Shopee, Spotify, Aliexpress, Telegram, Design)
 - Frontend `/` is the public `MarketplaceHome` (feed grid 1/2/3/4, hero search + dark `CategoryDropdown`, animated chips). Logged-in users access `/dashboard` via header/drawer.
 - `CategoryDropdown` (light/dark variants): vertical fade+slide menu, single-select, active = yellow #FFD700 + glow, hover = translate-x.

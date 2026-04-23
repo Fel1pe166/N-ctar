@@ -6,6 +6,7 @@ export const usersTable = pgTable("users", {
   name: text("name"),
   plan: text("plan").notNull().default("free"),
   adsLimit: integer("ads_limit").notNull().default(1),
+  role: text("role").notNull().default("user"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

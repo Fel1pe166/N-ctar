@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { UserPlan } from "./userPlan";
+import type { UserRole } from "./userRole";
 
 export interface User {
   id: string;
@@ -13,5 +14,6 @@ export interface User {
   name?: string;
   plan: UserPlan;
   adsLimit: number;
+  role: UserRole;
   createdAt: string;
 }

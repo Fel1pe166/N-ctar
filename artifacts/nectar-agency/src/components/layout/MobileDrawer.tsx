@@ -9,8 +9,10 @@ import {
   LogIn,
   UserPlus,
   LogOut,
+  ShieldCheck,
   X,
 } from "lucide-react";
+import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 
 interface DrawerItem {
   href?: string;
@@ -18,7 +20,7 @@ interface DrawerItem {
   icon: typeof Home;
 }
 
-const ITEMS: DrawerItem[] = [
+const BASE_ITEMS: DrawerItem[] = [
   { href: "/", label: "Início", icon: Home },
   { href: "/ads", label: "Categorias", icon: LayoutGrid },
   { href: "/plans", label: "Planos VIP", icon: Crown },
@@ -35,6 +37,16 @@ export function MobileDrawer({
   const [location] = useLocation();
   const { isSignedIn, user } = useUser();
   const { signOut } = useClerk();
+  const { data: me } = useGetMe({
+    query: { queryKey: getGetMeQueryKey(), enabled: !!isSignedIn },
+  });
+  const ITEMS: DrawerItem[] =
+    me?.role === "admin"
+      ? [
+          ...BASE_ITEMS,
+          { href: "/admin/payments", label: "Admin", icon: ShieldCheck },
+        ]
+      : BASE_ITEMS;
 
   useEffect(() => {
     if (open) {

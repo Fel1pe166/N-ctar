@@ -8,9 +8,11 @@ import {
   LifeBuoy,
   LogOut,
   Menu,
+  ShieldCheck,
 } from "lucide-react";
 import { useState } from "react";
 import { MobileDrawer } from "./MobileDrawer";
+import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 
 interface NavItem {
   href: string;
@@ -18,7 +20,7 @@ interface NavItem {
   icon: typeof LayoutDashboard;
 }
 
-const NAV: NavItem[] = [
+const BASE_NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/ads", label: "Anúncios", icon: Megaphone },
   { href: "/plans", label: "Planos", icon: Crown },
@@ -29,6 +31,14 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const { signOut } = useClerk();
   const { user } = useUser();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: me } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
+  const NAV: NavItem[] =
+    me?.role === "admin"
+      ? [
+          ...BASE_NAV,
+          { href: "/admin/payments", label: "Admin", icon: ShieldCheck },
+        ]
+      : BASE_NAV;
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">

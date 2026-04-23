@@ -23,6 +23,8 @@ import { AdsList } from "@/pages/AdsList";
 import { AdDetail } from "@/pages/AdDetail";
 import { PublicAd } from "@/pages/PublicAd";
 import { Plans } from "@/pages/Plans";
+import { PixCheckout } from "@/pages/PixCheckout";
+import { AdminPayments } from "@/pages/AdminPayments";
 import { SignInPage, SignUpPage } from "@/pages/AuthPages";
 import { SalesFeed } from "@/components/overlays/SalesFeed";
 import { SupportChat } from "@/components/overlays/SupportChat";
@@ -176,6 +178,16 @@ function ClerkProviderWithRoutes() {
           <Route path="/ads/:id">
             <Authed>
               <AdDetail />
+            </Authed>
+          </Route>
+          <Route path="/pix/:planId">
+            <Authed>
+              <PixCheckout />
+            </Authed>
+          </Route>
+          <Route path="/admin/payments">
+            <Authed>
+              <AdminPayments />
             </Authed>
           </Route>
           <Route component={NotFound} />

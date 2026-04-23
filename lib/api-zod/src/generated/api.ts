@@ -17,7 +17,105 @@ export const GetMeResponse = zod.object({
   name: zod.string().optional(),
   plan: zod.enum(["free", "basico", "medio", "avancado", "ilimitado"]),
   adsLimit: zod.number(),
+  role: zod.enum(["user", "admin"]),
   createdAt: zod.string(),
+});
+
+export const GetPixConfigResponse = zod.object({
+  pixKey: zod.string(),
+  qrUrl: zod.string(),
+  receiverName: zod.string().optional(),
+});
+
+export const CreatePaymentBody = zod.object({
+  planId: zod.enum(["basico", "medio", "avancado", "ilimitado"]),
+  proofUrl: zod.string().min(1),
+});
+
+export const CreatePaymentResponse = zod.object({
+  id: zod.string(),
+  userId: zod.string(),
+  userEmail: zod.string().nullish(),
+  userName: zod.string().nullish(),
+  plan: zod.string(),
+  amountBRL: zod.number(),
+  pixKey: zod.string(),
+  proofUrl: zod.string(),
+  status: zod.enum(["pending", "approved", "rejected"]),
+  createdAt: zod.string(),
+  reviewedAt: zod.string().nullish(),
+});
+
+export const ListMyPaymentsResponseItem = zod.object({
+  id: zod.string(),
+  userId: zod.string(),
+  userEmail: zod.string().nullish(),
+  userName: zod.string().nullish(),
+  plan: zod.string(),
+  amountBRL: zod.number(),
+  pixKey: zod.string(),
+  proofUrl: zod.string(),
+  status: zod.enum(["pending", "approved", "rejected"]),
+  createdAt: zod.string(),
+  reviewedAt: zod.string().nullish(),
+});
+export const ListMyPaymentsResponse = zod.array(ListMyPaymentsResponseItem);
+
+export const ListAdminPaymentsQueryParams = zod.object({
+  status: zod.enum(["pending", "approved", "rejected", "all"]).optional(),
+});
+
+export const ListAdminPaymentsResponseItem = zod.object({
+  id: zod.string(),
+  userId: zod.string(),
+  userEmail: zod.string().nullish(),
+  userName: zod.string().nullish(),
+  plan: zod.string(),
+  amountBRL: zod.number(),
+  pixKey: zod.string(),
+  proofUrl: zod.string(),
+  status: zod.enum(["pending", "approved", "rejected"]),
+  createdAt: zod.string(),
+  reviewedAt: zod.string().nullish(),
+});
+export const ListAdminPaymentsResponse = zod.array(
+  ListAdminPaymentsResponseItem,
+);
+
+export const ApprovePaymentParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const ApprovePaymentResponse = zod.object({
+  id: zod.string(),
+  userId: zod.string(),
+  userEmail: zod.string().nullish(),
+  userName: zod.string().nullish(),
+  plan: zod.string(),
+  amountBRL: zod.number(),
+  pixKey: zod.string(),
+  proofUrl: zod.string(),
+  status: zod.enum(["pending", "approved", "rejected"]),
+  createdAt: zod.string(),
+  reviewedAt: zod.string().nullish(),
+});
+
+export const RejectPaymentParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const RejectPaymentResponse = zod.object({
+  id: zod.string(),
+  userId: zod.string(),
+  userEmail: zod.string().nullish(),
+  userName: zod.string().nullish(),
+  plan: zod.string(),
+  amountBRL: zod.number(),
+  pixKey: zod.string(),
+  proofUrl: zod.string(),
+  status: zod.enum(["pending", "approved", "rejected"]),
+  createdAt: zod.string(),
+  reviewedAt: zod.string().nullish(),
 });
 
 export const ListPlansResponseItem = zod.object({
