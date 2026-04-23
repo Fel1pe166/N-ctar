@@ -31,14 +31,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const { signOut } = useClerk();
   const { user } = useUser();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { data: me } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
-  const NAV: NavItem[] =
-    me?.role === "admin"
-      ? [
-          ...BASE_NAV,
-          { href: "/admin/payments", label: "Admin", icon: ShieldCheck },
-        ]
-      : BASE_NAV;
+  const NAV: NavItem[] = BASE_NAV;
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">

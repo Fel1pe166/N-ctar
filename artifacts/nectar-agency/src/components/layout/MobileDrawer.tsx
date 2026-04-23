@@ -37,16 +37,7 @@ export function MobileDrawer({
   const [location] = useLocation();
   const { isSignedIn, user } = useUser();
   const { signOut } = useClerk();
-  const { data: me } = useGetMe({
-    query: { queryKey: getGetMeQueryKey(), enabled: !!isSignedIn },
-  });
-  const ITEMS: DrawerItem[] =
-    me?.role === "admin"
-      ? [
-          ...BASE_ITEMS,
-          { href: "/admin/payments", label: "Admin", icon: ShieldCheck },
-        ]
-      : BASE_ITEMS;
+  const ITEMS: DrawerItem[] = BASE_ITEMS;
 
   useEffect(() => {
     if (open) {
